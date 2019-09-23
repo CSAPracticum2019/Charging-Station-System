@@ -22,8 +22,7 @@ Copyright (C) 2019 Jacob Meadows
 """
 import pygame
 import string
-import random
-import collections
+import motor_spin
 import ID_Check
 
 
@@ -73,9 +72,10 @@ class App:
     def admin_menu(self):
         self.texts["title"] = TextObject(text="ADMIN MENU", rect=(0, 40, 1024, 60), fg_color=(0, 255, 0),
                                          justify="center", font=("Times New Roman", 80))
-        self.texts["instructions"] = TextObject(text="1. Add User\n2. Delete User\n3. View All\n4. Return",
-                                                rect=(0, 150, 1024, 60), fg_color=(0, 255, 0), justify="center",
-                                                font=("Times New Roman", 30))
+        self.texts["instructions"] = TextObject(
+            text="1. Add User\n2. Delete User\n3. View All\n4. Exit Fullscreen\n5. Return to user menu",
+            rect=(0, 150, 1024, 60), fg_color=(0, 255, 0), justify="center", font=("Times New Roman", 30)
+        )
 
         def submit_command():  # todo add actual checking of code and user id
             if self.text_inputs['pin_input'].text == "1":
@@ -85,6 +85,8 @@ class App:
             elif self.text_inputs['pin_input'].text == "3":
                 pass
             elif self.text_inputs['pin_input'].text == "4":
+                pass
+            elif self.text_inputs["pin_input"].text == "5":
                 self.menu()
 
         self.text_inputs["pin_input"] = TextInput(self, text="", rect=(497, 300, 30, 50), fg_color=(0, 255, 0),
@@ -114,13 +116,18 @@ class App:
             self.text_inputs["pin_input"].command = submit_command
 
     def open_command(self):
-        self.texts.clear()
-        self.text_inputs.clear()
         self.buttons.clear()
-        self.texts["title"] = TextObject(text="OPEN", rect=(0, 40, 1024, 60), fg_color=(0, 255, 0),
-                                         justify="center", font=("Times New Roman", 80))
+        self.texts["title"].text = "OPEN"
+        self.texts["instructions"].text = "Press Enter to close."
+        self.text_inputs["pin_input"].fg_color = (0, 0, 0)
 
-        print("OPEN")
+        def submit_command():
+            motor_spin.close()
+            self.menu()
+
+        self.text_inputs["pin_input"].command = submit_command
+
+        motor_spin.open()
 
     def key_callback(self, event):
         mods = pygame.key.get_mods()
