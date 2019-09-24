@@ -24,6 +24,7 @@ import pygame
 import string
 import motor_spin
 import ID_Check
+import smtplib
 
 
 class App:
@@ -31,11 +32,12 @@ class App:
         pygame.init()
         pygame.display.set_caption("Python Review")
         pygame.key.set_repeat(500, 20)
-        self.window = pygame.display.set_mode((1024, 600))
+        self.window = pygame.display.set_mode((1024, 600), pygame.FULLSCREEN)
         self.clock = pygame.time.Clock()
         self.texts = dict()
         self.buttons = dict()
         self.text_inputs = dict()
+        self.mail_timer = 0  # time limit, in seconds, before an email is sent to Practicum IT group (0 = no countdown)
         self.menu()
 
         while True:
@@ -55,6 +57,19 @@ class App:
                 self.buttons[button].render(self.window)
             for text_input in self.text_inputs:
                 self.text_inputs[text_input].render(self.window)
+
+            if self.mail_timer > 0:
+                self.mail_timer -= pygame.time.get_ticks() / 1000
+                if self.mail_timer <= 0:
+                    self.mail_timer = 0
+                    server = smtplib.SMTP('smtp.gmail.com', 587)
+                    server.starttls()
+                    user, pswd, rcvr = open("charging_email.txt", "r").read().split()
+                    server.login(user, pswd)
+
+                    msg = "CHARGING STATION HAS BEEN LEFT OPEN FOR OVER THE GIVEN TIME LIMIT"
+                    server.sendmail(user, rcvr, msg)
+                    server.quit()
 
             pygame.display.flip()
             self.clock.tick()
@@ -77,7 +92,7 @@ class App:
             rect=(0, 150, 1024, 60), fg_color=(0, 255, 0), justify="center", font=("Times New Roman", 30)
         )
 
-        def submit_command():  # todo add actual checking of code and user id
+        def submit_command():
             if self.text_inputs['pin_input'].text == "1":
                 pass
             elif self.text_inputs['pin_input'].text == "2":
@@ -85,12 +100,12 @@ class App:
             elif self.text_inputs['pin_input'].text == "3":
                 pass
             elif self.text_inputs['pin_input'].text == "4":
-                pass
+                self.window = pygame.display.set_mode((1024, 600))
             elif self.text_inputs["pin_input"].text == "5":
                 self.menu()
 
-        self.text_inputs["pin_input"] = TextInput(self, text="", rect=(497, 300, 30, 50), fg_color=(0, 255, 0),
-                                                  restriction="1234", limit=1, command=submit_command,
+        self.text_inputs["pin_input"] = TextInput(self, text="", rect=(497, 330, 30, 50), fg_color=(0, 255, 0),
+                                                  restriction="12345", limit=1, command=submit_command,
                                                   font=("Times New Roman", 40))
         self.text_inputs["pin_input"].focus_state = True
 
@@ -120,6 +135,7 @@ class App:
         self.texts["title"].text = "OPEN"
         self.texts["instructions"].text = "Press Enter to close."
         self.text_inputs["pin_input"].fg_color = (0, 0, 0)
+        self.mail_timer = 60
 
         def submit_command():
             motor_spin.close()
